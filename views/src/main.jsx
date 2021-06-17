@@ -1,6 +1,33 @@
-function App() {
-    return <div>Hello React!!</div>;
+class Login extends React.Component {
+    render() {
+        return (
+            <div class="form-wrapper">
+            <h1>Sign In</h1>
+            <form>
+                <div class="form-item">
+                <label for="email"></label>
+                <input type="email" name="email" required="required" placeholder="Email Address"></input>
+                </div>
+                <div class="form-item">
+                <label for="password"></label>
+                <input type="password" name="password" required="required" placeholder="Password"></input>
+                </div>
+                <div class="button-panel">
+                <input type="submit" class="button" title="Sign In" value="Sign In"></input>
+                </div>
+            </form>
+            <div class="form-footer">
+                <p><a href="#">Create an account</a></p>
+                <p><a href="#">Forgot password?</a></p>
+            </div>
+            </div>
+        );
+    }
 }
 
-const target = document.querySelector('#app');
-ReactDOM.render(<App />, target);
+ReactDOM.render(
+    <React.StrictMode>
+      <Login />
+    </React.StrictMode>,
+    document.getElementById('login')
+);
