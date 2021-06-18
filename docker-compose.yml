@@ -19,3 +19,13 @@ services:
             - POSTGRES_PASSWORD=password
         ports: 
             - '5433:5432'
+    front:
+        container_name: nodejs
+        build: ./docker/js
+        tty: true
+        ports: 
+            - '3000:3000'
+        volumes: 
+            - ./views/build:/workbookstock/build
+            - ./views/src:/workbookstock/src
+            - ./views/public:/workbookstock/public
