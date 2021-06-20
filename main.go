@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/ygjken/workbook-stock/middlewares"
+	"github.com/ygjken/workbook-stock/server"
 )
 
 func main() {
@@ -11,16 +11,10 @@ func main() {
 
 	r.LoadHTMLGlob("./views/build/*.html")        // html
 	r.Static("/static/", "./views/build/static/") // react
-	r.GET("/", index)
-	r.GET("/login", login)                             // handler
+
+	r.GET("/", server.Index)          // homeページに飛ぶ
+	r.GET("/login", server.Login)     // loginページに飛ぶ
+	r.POST("/auth", middlewares.Auth) // userを認識し,sessionを作成
 
 	r.Run(":8080")
-}
-
-func index(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", gin.H{})
-}
-
-func login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "login.html", gin.H{})
 }
