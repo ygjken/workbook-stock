@@ -50,6 +50,9 @@ function App() {
             </div>
           </div>
         </nav>
+        <div className="intro-text">
+          <p>Coming Soon...</p>
+        </div>
       </body>
     </div>
   );
