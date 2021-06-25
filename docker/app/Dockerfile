@@ -10,5 +10,6 @@ RUN mkdir -p ${WORKDIR}
 RUN go get github.com/lib/pq
 RUN go get github.com/gin-gonic/gin
 RUN go get github.com/cosmtrek/air
+RUN go get github.com/gin-contrib/sessions
 
 EXPOSE 8080

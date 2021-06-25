@@ -1,17 +1,27 @@
 package middlewares
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
-func Auth(ctx *gin.Context) {
-	user := ctx.PostForm("user")
-	pass := ctx.PostForm("pass")
-	fmt.Println(ctx)
+func SessionCheck(ctx *gin.Context) {
+	var UserId interface{}
 
-	// DEBUG: Formから受診した内容をそのまま返す
-	ctx.JSON(http.StatusOK, gin.H{"user": user, "pass": pass})
+	session := sessions.Default(ctx)
+	UserId = session.Get("UserId")
+
+	// if don't have session, redircet to /login
+	if UserId == nil {
+		log.Println("don't login")
+		ctx.Redirect(http.StatusMovedPermanently, "/login")
+		ctx.Abort()
+	} else {
+		ctx.Set("UserId", UserId)
+		ctx.Next()
+	}
+
 }

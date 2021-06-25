@@ -1,20 +1,31 @@
 package main
 
 import (
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/ygjken/workbook-stock/controllers"
 	"github.com/ygjken/workbook-stock/middlewares"
-	"github.com/ygjken/workbook-stock/server"
 )
 
 func main() {
-	r := gin.Default()
+	router := gin.Default()
 
-	r.LoadHTMLGlob("./views/build/*.html")        // html
-	r.Static("/static/", "./views/build/static/") // react
+	router.LoadHTMLGlob("./views/build/*.html")        // html
+	router.Static("/static/", "./views/build/static/") // react
 
-	r.GET("/", server.Index)          // homeページに飛ぶ
-	r.GET("/login", server.Login)     // loginページに飛ぶ
-	r.POST("/auth", middlewares.Auth) // userを認識し,sessionを作成
+	router.GET("/", controllers.Index) // homeページに飛ぶ
 
-	r.Run(":8080")
+	store := cookie.NewStore([]byte("_secret"))
+	router.Use(sessions.Sessions("_session", store))
+	router.GET("/login", controllers.GetLogin) // loginページに飛ぶ
+	router.POST("/auth", controllers.Auth)
+
+	user := router.Group("/user")
+	user.Use(middlewares.SessionCheck)
+	{
+		user.GET("/main", controllers.TestMain) // cookicのテスト
+	}
+
+	router.Run(":8080")
 }
