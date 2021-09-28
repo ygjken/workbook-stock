@@ -11,7 +11,7 @@ func Index(ctx *gin.Context) {
 	// gin.H{}はテンプレートエンジンに埋め込むためのもの
 }
 
-func GetLogin(ctx *gin.Context) {
+func Login(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "login.html", gin.H{})
 }
 

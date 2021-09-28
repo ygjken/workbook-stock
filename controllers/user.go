@@ -1,30 +1,54 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/ygjken/workbook-stock/data"
 )
 
-func Auth(ctx *gin.Context) {
-	email := ctx.PostForm("email")
-	pass := ctx.PostForm("pass")
-	if email == "user0@abc.com" && pass == "user00" {
-		log.Println("user auth pass")
-		UserId := "user0"
-		PostLogin(ctx, UserId)
-		ctx.Redirect(http.StatusMovedPermanently, "/user/main")
-	} else {
-		ctx.Redirect(http.StatusFound, "/login")
+func UserSignUp(ctx *gin.Context) {
+	println("post/signup")
+	username := ctx.PostForm("username")
+	email := ctx.PostForm("emailaddress")
+	password := ctx.PostForm("password")
+	passwordConf := ctx.PostForm("passwordconfirmation")
+
+	if password != passwordConf {
+		println("Error: password and passwordConf not match")
+		ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
+		return
 	}
 
+	db := data.DummyDB()
+	if err := db.SaveUser(username, email, password); err != nil {
+		println("Error: " + err.Error())
+	} else {
+		println("Signup success!!")
+		println("  username: " + username)
+		println("  email: " + email)
+		println("  password: " + password)
+	}
+
+	ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
 }
 
-func PostLogin(ctx *gin.Context, UserId string) {
-	session := sessions.Default(ctx)
-	session.Set("UserId", UserId)
-	session.Save()
-	log.Println("make session done")
+func UserLogIn(ctx *gin.Context) {
+	println("post/login")
+	username := ctx.PostForm("username")
+	password := ctx.PostForm("password")
+
+	db := data.DummyDB()
+	user, err := db.GetUser(username, password)
+	if err != nil {
+		println("Error: " + err.Error())
+	} else {
+		println("Authentication Success!!")
+		println("  username: " + user.Username)
+		println("  email: " + user.Email)
+		println("  password: " + user.Password)
+		user.Authenticate()
+	}
+
+	ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
 }
