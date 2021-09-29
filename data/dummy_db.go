@@ -41,6 +41,7 @@ var store DummyDatabase
 
 func init() {
 	store.database = map[string]interface{}{}
+	store.SaveDummyUser() // ダミーとなるユーザを設定する
 }
 
 func DummyDB() *DummyDatabase {
@@ -73,8 +74,14 @@ func (db *DummyDatabase) GetUser(username, password string) (*DummyUserModel, er
 
 	user := buffer.(*DummyUserModel)
 	if err := crypto.CompareHashAndPassword(user.Password, password); err != nil {
-		return nil, errors.New("user \"" + username + "\" doesn't exists")
+		return nil, errors.New("user \"" + username + "\" 's password uncorrect")
 	}
 
 	return user, nil
+}
+
+// NOTICE: データベースを作成できるまでは暫定的なユーザをセットする
+func (db *DummyDatabase) SaveDummyUser() error {
+	e := db.SaveUser("test_user", "test@admin.com", "testpass")
+	return e
 }

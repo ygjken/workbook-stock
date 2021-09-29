@@ -3,6 +3,8 @@ module github.com/ygjken/workbook-stock
 go 1.16
 
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/cosmtrek/air v1.27.3 // indirect
 	github.com/gin-contrib/sessions v0.0.3 // indirect
 	github.com/gin-gonic/gin v1.7.4 // indirect
 	github.com/koron/go-dproxy v1.3.0 // indirect
