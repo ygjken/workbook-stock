@@ -41,6 +41,7 @@ var store DummyDatabase
 
 func init() {
 	store.database = map[string]interface{}{}
+	store.SaveUser("tester", "test@admin.com", "admintest")
 }
 
 func DummyDB() *DummyDatabase {
