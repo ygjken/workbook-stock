@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
 	"github.com/ygjken/workbook-stock/data"
 )
@@ -54,8 +56,16 @@ func UserLogIn(ctx *gin.Context) {
 	uuid := crypto.SecureRandomBase64()
 	session := sessions.Default(ctx)
 	ctx.SetCookie("uuid", uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
-	session.Set("uuid", uuid)
-	session.Save()
+
+	// セッションの制御
+	var loginedList []string
+	if logined, err := dproxy.New(session.Get("logined")).String(); err != nil {
+		json.Unmarshal([]byte(logined), &loginedList)
+	}
+	loginedList = append(loginedList, uuid)
+	logined, err := json.Marshal(loginedList)
+	session.Set("logined", logined)
+	log.Println("UserLoginHander:", loginedList)
 
 	log.Printf("Authentication Success!!")
 	log.Printf("  username: " + user.Username)
