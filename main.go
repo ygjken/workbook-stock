@@ -5,11 +5,14 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	ctl "github.com/ygjken/workbook-stock/controllers"
+	mid "github.com/ygjken/workbook-stock/middlewares"
 )
 
 func main() {
 	router := gin.Default()
+
 	store := cookie.NewStore([]byte("_secret"))
+	store.Options(sessions.Options{MaxAge: 3600})
 	router.Use(sessions.Sessions("_session", store))
 
 	router.LoadHTMLGlob("./views/build/*.html")        // html
@@ -17,9 +20,11 @@ func main() {
 	router.GET("/", ctl.Index)                         // homeページに飛ぶ
 	router.GET("/login", ctl.Login)
 
-	user := router.Group("/user") // ユーザー認証が必要となるグループ
+	user := router.Group("/user")
+	user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
 	{
 		user.POST("/login", ctl.UserLogIn) // cookicのテスト
+		user.GET("/testmain", ctl.TestMain)
 	}
 
 	router.Run(":8080")

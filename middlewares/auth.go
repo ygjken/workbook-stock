@@ -8,26 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SessionInfo struct {
-	UserId interface{}
-}
-
-func LoginCheck(ctx *gin.Context) gin.HandlerFunc {
+func LoginCheck() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var logininfo SessionInfo
 
 		session := sessions.Default(ctx)
-		logininfo.UserId = session.Get("UserId")
+		logined := session.Get("uuid")
+		var err error = nil
+		log.Println(logined)
 
-		// セッションがない場合、ログインフォームをだす
-		if logininfo.UserId == nil {
-			log.Println("ログインしていません")
-			ctx.Redirect(http.StatusMovedPermanently, "/login")
+		if err != nil {
+			ctx.Status(http.StatusUnauthorized)
 			ctx.Abort()
 		} else {
-			ctx.Set("UserId", logininfo.UserId)
 			ctx.Next()
 		}
-		log.Println("ログインチェック終わり")
 	}
 }
