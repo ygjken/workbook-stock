@@ -58,14 +58,26 @@ func UserLogIn(ctx *gin.Context) {
 	ctx.SetCookie("uuid", uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
 
 	// セッションの制御
-	var loginedList []string
-	if logined, err := dproxy.New(session.Get("logined")).String(); err != nil {
-		json.Unmarshal([]byte(logined), &loginedList)
+	logined := session.Get("logined_uuid")
+	if logined == nil {
+		a := []string{uuid}
+		if ary, err := json.Marshal(a); err == nil {
+			session.Set("logined_uuid", string(ary))
+			session.Save()
+		}
+
+	} else {
+		var ary []string
+		if str, err := dproxy.New(logined).String(); err == nil {
+			log.Println(err)
+			json.Unmarshal([]byte(str), &ary)
+		}
+		logined = append(ary, uuid)
+		if byt, err := json.Marshal(logined); err == nil {
+			session.Set("logined_uuid", string(byt))
+			session.Save()
+		}
 	}
-	loginedList = append(loginedList, uuid)
-	logined, err := json.Marshal(loginedList)
-	session.Set("logined", logined)
-	log.Println("UserLoginHander:", loginedList)
 
 	log.Printf("Authentication Success!!")
 	log.Printf("  username: " + user.Username)
@@ -75,4 +87,39 @@ func UserLogIn(ctx *gin.Context) {
 	user.Authenticate()
 
 	ctx.Redirect(http.StatusSeeOther, "/")
+}
+
+// TODO: 作成途中
+func UserLogout(ctx *gin.Context) {
+	var ary []string
+	session := sessions.Default(ctx)
+	logined := session.Get("logined_uuid")
+	str, err := dproxy.New(logined).String()
+	if err != nil { // loginedが存在しない場合もこの例外処理が走る
+		log.Println("UserLogout():", err)
+		ctx.Redirect(http.StatusUnauthorized, "/")
+		return
+	}
+	if err = json.Unmarshal([]byte(str), &ary); err != nil {
+		log.Println("UserLogout():", err)
+		ctx.Redirect(http.StatusUnauthorized, "/")
+		return
+	}
+
+	if uuid, err := ctx.Cookie("uuid"); err == nil {
+		if isContains(uuid, ary) {
+
+		}
+	}
+
+}
+
+// 指定のキーが配列内に存在しているかどうか
+func isContains(s string, a []string) bool {
+	for _, v := range a {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
