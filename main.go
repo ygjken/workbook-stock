@@ -19,11 +19,11 @@ func main() {
 	router.Static("/static/", "./views/build/static/") // react
 	router.GET("/", ctl.Index)                         // homeページに飛ぶ
 	router.GET("/login", ctl.Login)
+	router.POST("/user_login", ctl.UserLogIn) // cookicのテスト
 
 	user := router.Group("/user")
 	user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
 	{
-		user.POST("/login", ctl.UserLogIn) // cookicのテスト
 		user.GET("/testmain", ctl.TestMain)
 	}
 

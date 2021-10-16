@@ -58,26 +58,16 @@ func UserLogIn(ctx *gin.Context) {
 	ctx.SetCookie("uuid", uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
 
 	// セッションの制御
-	logined := session.Get("logined_uuid")
-	if logined == nil {
-		a := []string{uuid}
-		if ary, err := json.Marshal(a); err == nil {
-			session.Set("logined_uuid", string(ary))
-			session.Save()
-		}
-
+	uuids := session.Get("logined_uuid_str")
+	if uuids == nil {
+		session.Set("logined_uuid_str", uuid)
 	} else {
-		var ary []string
-		if str, err := dproxy.New(logined).String(); err == nil {
-			log.Println(err)
-			json.Unmarshal([]byte(str), &ary)
-		}
-		logined = append(ary, uuid)
-		if byt, err := json.Marshal(logined); err == nil {
-			session.Set("logined_uuid", string(byt))
-			session.Save()
+		if uuidstr, err := dproxy.New(uuids).String(); err == nil {
+			uuids = uuidstr + uuid
+			session.Set("logined_uuid_str", uuids)
 		}
 	}
+	session.Save()
 
 	log.Printf("Authentication Success!!")
 	log.Printf("  username: " + user.Username)
@@ -97,12 +87,12 @@ func UserLogout(ctx *gin.Context) {
 	str, err := dproxy.New(logined).String()
 	if err != nil { // loginedが存在しない場合もこの例外処理が走る
 		log.Println("UserLogout():", err)
-		ctx.Redirect(http.StatusUnauthorized, "/")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 	if err = json.Unmarshal([]byte(str), &ary); err != nil {
 		log.Println("UserLogout():", err)
-		ctx.Redirect(http.StatusUnauthorized, "/")
+		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
