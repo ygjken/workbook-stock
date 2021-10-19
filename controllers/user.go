@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -39,6 +39,7 @@ func UserSignUp(ctx *gin.Context) {
 	ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
 }
 
+// ログインの処理を行う
 func UserLogIn(ctx *gin.Context) {
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
@@ -80,28 +81,38 @@ func UserLogIn(ctx *gin.Context) {
 }
 
 // TODO: 作成途中
+// ログアウト処理を行う
 func UserLogout(ctx *gin.Context) {
-	var ary []string
+	uuid, err := ctx.Cookie("uuid")
+	if err != nil {
+		log.Println("controllers/UserLogout Error:", err)
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+
 	session := sessions.Default(ctx)
-	logined := session.Get("logined_uuid")
-	str, err := dproxy.New(logined).String()
-	if err != nil { // loginedが存在しない場合もこの例外処理が走る
-		log.Println("UserLogout():", err)
-		ctx.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-	if err = json.Unmarshal([]byte(str), &ary); err != nil {
-		log.Println("UserLogout():", err)
+	logined := session.Get("logined_uuid_str")
+	if logined != nil {
+		log.Println("controllers/UserLogout Error:", err)
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
-	if uuid, err := ctx.Cookie("uuid"); err == nil {
-		if isContains(uuid, ary) {
-
-		}
+	loginedstr, err := dproxy.New(logined).String()
+	if err != nil {
+		log.Println("controllers/UserLogout Error:", err)
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
 	}
 
+	r := regexp.MustCompile(uuid)
+	if !r.MatchString(loginedstr) {
+		log.Println("controllers/UserLogout Error: Can't find uuid of the logined user in session")
+		ctx.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	loginedstr = r.ReplaceAllString(loginedstr, "")
+	session.Set("logined_uuid_str", loginedstr)
 }
 
 // 指定のキーが配列内に存在しているかどうか

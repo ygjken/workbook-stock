@@ -21,7 +21,7 @@ func main() {
 	router.GET("/login", ctl.Login)
 	router.POST("/user_login", ctl.UserLogIn) // cookicのテスト
 
-	user := router.Group("/user")
+	user := router.Group("/u")
 	user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
 	{
 		user.GET("/testmain", ctl.TestMain)
