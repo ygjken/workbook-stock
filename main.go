@@ -1,6 +1,12 @@
 package main
 
 import (
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strings"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -8,7 +14,7 @@ import (
 	mid "github.com/ygjken/workbook-stock/middlewares"
 )
 
-func main() {
+func router() *gin.Engine {
 	router := gin.Default()
 
 	store := cookie.NewStore([]byte("_secret"))
@@ -27,5 +33,34 @@ func main() {
 		user.GET("/testmain", ctl.TestMain)
 	}
 
-	router.Run(":8080")
+	return router
+}
+
+func main() {
+
+	// router().Run(":8080")
+
+	// make request
+	values := url.Values{}
+	values.Add("username", "tester")
+	values.Add("password", "admintest")
+	reqBody := strings.NewReader(values.Encode())
+
+	// response
+	resp := httptest.NewRecorder()
+	_, router := gin.CreateTestContext(resp)
+	router.POST("/user_login", ctl.UserLogIn)
+
+	// set request into gin.context
+	req, _ := http.NewRequest(
+		http.MethodPost,
+		"/user_login",
+		reqBody,
+	)
+
+	req.Header.Set("Context-Type", "application/x-www-form-urlencoded")
+
+	router.ServeHTTP(resp, req)
+	log.Print()
+
 }

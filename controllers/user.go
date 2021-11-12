@@ -124,3 +124,21 @@ func isContains(s string, a []string) bool {
 	}
 	return false
 }
+
+// testをデバックする用のtestハンドラー
+func CreateUserAction(c *gin.Context) {
+	var err error
+
+	un := c.PostForm("username")
+	pw := c.PostForm("password")
+
+	log.Printf("un:%s pw:%s", un, pw)
+
+	if err == nil {
+		c.JSON(http.StatusCreated, gin.H{"message": "success", "name": un, "pass": pw})
+	} else {
+		//作成できなければエラーメッセージを返す。
+		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+
+	}
+}
