@@ -48,19 +48,18 @@ func main() {
 
 	// response
 	resp := httptest.NewRecorder()
-	_, router := gin.CreateTestContext(resp)
-	router.POST("/user_login", ctl.UserLogIn)
+	c, _ := gin.CreateTestContext(resp)
 
 	// set request into gin.context
-	req, _ := http.NewRequest(
+	c.Request, _ = http.NewRequest(
 		http.MethodPost,
 		"/user_login",
 		reqBody,
 	)
 
-	req.Header.Set("Context-Type", "application/x-www-form-urlencoded")
+	c.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	router.ServeHTTP(resp, req)
+	ctl.CreateUserAction(c)
 	log.Print()
 
 }
