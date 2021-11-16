@@ -49,7 +49,7 @@ func UserLogIn(ctx *gin.Context) {
 	user, err := db.GetUser(username, password)
 	if err != nil {
 		log.Printf("Error: " + err.Error())
-		ctx.Redirect(http.StatusSeeOther, "/login")
+		ctx.Redirect(http.StatusFound, "/login")
 		return
 	}
 

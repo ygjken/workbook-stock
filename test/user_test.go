@@ -1,31 +1,41 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	"github.com/ygjken/workbook-stock/controllers"
+	ctl "github.com/ygjken/workbook-stock/controllers"
 )
 
+type userinfo struct {
+	username string
+	password string
+}
+
+type wantedResponse struct {
+	code int
+	body map[string]interface{}
+}
+
 func TestUserLogIn(t *testing.T) {
-	type userinfo struct {
-		username string
-		password string
-	}
 
 	tests := []struct {
 		name string
 		info userinfo
+		want wantedResponse
 	}{
-		// TODO: Add test cases.
 		{
 			name: "logout_test",
 			info: userinfo{username: "tester", password: "admintest"},
+			want: wantedResponse{
+				code: http.StatusSeeOther,
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -39,21 +49,27 @@ func TestUserLogIn(t *testing.T) {
 
 			// response
 			resp := httptest.NewRecorder()
-			_, router := gin.CreateTestContext(resp)
-			router.POST("/login_user", controllers.UserLogIn)
+			_, r := gin.CreateTestContext(resp)
 
-			// set request into gin.context
+			// session and cookie
+			s := cookie.NewStore([]byte("_secret"))
+			s.Options(sessions.Options{MaxAge: 3600})
+			r.Use(sessions.Sessions("_session", s))
+
+			// set handler function
+			r.POST("/user_login", func(c *gin.Context) {
+				ctl.UserLogIn(c)
+			})
+
+			// make request
 			req, _ := http.NewRequest(
 				http.MethodPost,
-				"/login_user",
+				"/user_login",
 				reqBody,
 			)
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-			req.Header.Set("Context-Type", "application/x-www-form-urlencoded")
-			req.PostForm = values
-
-			router.ServeHTTP(resp, req)
-			log.Print()
+			r.ServeHTTP(resp, req)
 
 		})
 	}

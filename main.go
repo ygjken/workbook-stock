@@ -1,12 +1,6 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strings"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -38,28 +32,35 @@ func router() *gin.Engine {
 
 func main() {
 
-	// router().Run(":8080")
+	router().Run(":8080")
 
 	// make request
-	values := url.Values{}
-	values.Add("username", "tester")
-	values.Add("password", "admintest")
-	reqBody := strings.NewReader(values.Encode())
+	// values := url.Values{}
+	// values.Add("username", "tester")
+	// values.Add("password", "admintest")
+	// reqBody := strings.NewReader(values.Encode())
 
-	// response
-	resp := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(resp)
+	// // response
+	// resp := httptest.NewRecorder()
+	// _, r := gin.CreateTestContext(resp)
 
-	// set request into gin.context
-	c.Request, _ = http.NewRequest(
-		http.MethodPost,
-		"/user_login",
-		reqBody,
-	)
+	// s := cookie.NewStore([]byte("_secret"))
+	// s.Options(sessions.Options{MaxAge: 3600})
+	// r.Use(sessions.Sessions("_session", s))
 
-	c.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// r.POST("/user_login", func(c *gin.Context) {
+	// 	ctl.UserLogIn(c)
+	// })
 
-	ctl.CreateUserAction(c)
-	log.Print()
+	// // set request into gin.context
+	// req, _ := http.NewRequest(
+	// 	http.MethodPost,
+	// 	"/user_login",
+	// 	reqBody,
+	// )
+
+	// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	// r.ServeHTTP(resp, req)
 
 }
