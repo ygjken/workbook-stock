@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
-	"github.com/ygjken/workbook-stock/data"
+	"github.com/ygjken/workbook-stock/model"
 )
 
 // TODO: セッションとクッキーに対応できるように書き換え
@@ -26,7 +26,7 @@ func UserSignUp(ctx *gin.Context) {
 		return
 	}
 
-	db := data.DummyDB()
+	db := model.DummyDB()
 	if err := db.SaveUser(username, email, password); err != nil {
 		println("Error: " + err.Error())
 	} else {
@@ -45,7 +45,7 @@ func UserLogIn(ctx *gin.Context) {
 	password := ctx.PostForm("password")
 
 	// ログインできるかどうかをチェック
-	db := data.DummyDB()
+	db := model.DummyDB()
 	user, err := db.GetUser(username, password)
 	if err != nil {
 		log.Printf("Error: " + err.Error())
@@ -70,11 +70,12 @@ func UserLogIn(ctx *gin.Context) {
 	}
 	session.Save()
 
-	log.Printf("Authentication Success!!")
-	log.Printf("  username: " + user.Username)
-	log.Printf("  email: " + user.Email)
-	log.Printf("  password: " + user.Password)
-	log.Println("  setted session: ", session.Get("uuid"))
+	// DEBUG:
+	// log.Printf("Authentication Success!!")
+	// log.Printf("  username: " + user.Username)
+	// log.Printf("  email: " + user.Email)
+	// log.Printf("  password: " + user.Password)
+	// log.Println("  setted session: ", session.Get("uuid"))
 	user.Authenticate()
 
 	ctx.Redirect(http.StatusSeeOther, "/")
@@ -123,22 +124,4 @@ func isContains(s string, a []string) bool {
 		}
 	}
 	return false
-}
-
-// testをデバックする用のtestハンドラー
-func CreateUserAction(c *gin.Context) {
-	var err error
-
-	un := c.PostForm("username")
-	pw := c.PostForm("password")
-
-	log.Printf("un:%s pw:%s", un, pw)
-
-	if err == nil {
-		c.JSON(http.StatusCreated, gin.H{"message": "success", "name": un, "pass": pw})
-	} else {
-		//作成できなければエラーメッセージを返す。
-		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
-
-	}
 }
