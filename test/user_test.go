@@ -19,8 +19,8 @@ type userinfo struct {
 }
 
 type wantedResponse struct {
-	code int
-	body map[string]interface{}
+	code     int
+	location string
 }
 
 func TestUserLogIn(t *testing.T) {
@@ -31,10 +31,19 @@ func TestUserLogIn(t *testing.T) {
 		want wantedResponse
 	}{
 		{
-			name: "logout_test",
+			name: "correct login",
 			info: userinfo{username: "tester", password: "admintest"},
 			want: wantedResponse{
-				code: http.StatusSeeOther,
+				code:     http.StatusSeeOther,
+				location: "/",
+			},
+		},
+		{
+			name: "uncorrect login",
+			info: userinfo{username: "s", password: "f"},
+			want: wantedResponse{
+				code:     http.StatusFound,
+				location: "/login",
 			},
 		},
 	}
@@ -71,6 +80,15 @@ func TestUserLogIn(t *testing.T) {
 
 			r.ServeHTTP(resp, req)
 
+			// check response
+			// log.Println("response code:", resp.Code)
+			if resp.Code != tt.want.code {
+				t.Errorf("Login failed with %s.", tt.name)
+			}
+
+			if resp.HeaderMap.Get("Location") != tt.want.location {
+				t.Errorf("Login failed with %s.", tt.name)
+			}
 		})
 	}
 }
