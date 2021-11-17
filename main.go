@@ -34,33 +34,4 @@ func main() {
 
 	router().Run(":8080")
 
-	// make request
-	// values := url.Values{}
-	// values.Add("username", "tester")
-	// values.Add("password", "admintest")
-	// reqBody := strings.NewReader(values.Encode())
-
-	// // response
-	// resp := httptest.NewRecorder()
-	// _, r := gin.CreateTestContext(resp)
-
-	// s := cookie.NewStore([]byte("_secret"))
-	// s.Options(sessions.Options{MaxAge: 3600})
-	// r.Use(sessions.Sessions("_session", s))
-
-	// r.POST("/user_login", func(c *gin.Context) {
-	// 	ctl.UserLogIn(c)
-	// })
-
-	// // set request into gin.context
-	// req, _ := http.NewRequest(
-	// 	http.MethodPost,
-	// 	"/user_login",
-	// 	reqBody,
-	// )
-
-	// req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	// r.ServeHTTP(resp, req)
-
 }
