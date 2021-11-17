@@ -83,7 +83,7 @@ func UserLogIn(ctx *gin.Context) {
 
 // TODO: 作成途中
 // ログアウト処理を行う
-func UserLogout(ctx *gin.Context) {
+func UserLogOut(ctx *gin.Context) {
 	uuid, err := ctx.Cookie("uuid")
 	if err != nil {
 		log.Println("controllers/UserLogout Error:", err)

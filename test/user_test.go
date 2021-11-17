@@ -67,7 +67,10 @@ func TestUserLogIn(t *testing.T) {
 
 			// set handler function
 			r.POST("/user_login", func(c *gin.Context) {
+				// session := sessions.Default(c)
+				// log.Println("before login: ", session.Get("logined_uuid_str"))
 				ctl.UserLogIn(c)
+				// log.Println("after login: ", session.Get("logined_uuid_str"))
 			})
 
 			// make request
@@ -89,6 +92,31 @@ func TestUserLogIn(t *testing.T) {
 			if resp.HeaderMap.Get("Location") != tt.want.location {
 				t.Errorf("Login failed with %s.", tt.name)
 			}
+		})
+	}
+}
+
+func TestUserLogOut(t *testing.T) {
+	type args struct {
+		ctx *gin.Context
+	}
+	tests := []struct {
+		name string
+		info userinfo
+		want wantedResponse
+	}{
+		{
+			name: "correct login",
+			info: userinfo{username: "tester", password: "admintest"},
+			want: wantedResponse{
+				code:     http.StatusSeeOther,
+				location: "/",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO: write code here
 		})
 	}
 }
