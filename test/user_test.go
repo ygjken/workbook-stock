@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -117,6 +118,58 @@ func TestUserLogOut(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// TODO: write code here
+			// make request
+			values := url.Values{}
+			values.Add("username", tt.info.username)
+			values.Add("password", tt.info.password)
+			reqBody := strings.NewReader(values.Encode())
+
+			// response
+			resp := httptest.NewRecorder()
+			_, r := gin.CreateTestContext(resp)
+
+			// session and cookie
+			s := cookie.NewStore([]byte("_secret"))
+			s.Options(sessions.Options{MaxAge: 3600})
+			r.Use(sessions.Sessions("_session", s))
+
+			// set handler function
+			r.POST("/user_login", func(c *gin.Context) {
+				session := sessions.Default(c)
+				log.Println("before login: ", session.Get("logined_uuid_str"))
+				ctl.UserLogIn(c)
+				log.Println("after login: ", session.Get("logined_uuid_str"))
+
+				log.Println("before logout: session->", session.Get("logined_uuid_str"))
+				ctl.UserLogOut(c)
+				log.Println("after logout: session->", session.Get("logined_uuid_str"))
+			})
+
+			r.GET("/user_logout", func(c *gin.Context) {
+				session := sessions.Default(c)
+				log.Println("before logout: session->", session.Get("logined_uuid_str"))
+				ctl.UserLogOut(c)
+				log.Println("after logout: session->", session.Get("logined_uuid_str"))
+			})
+
+			// make login request
+			loginReq, _ := http.NewRequest(
+				http.MethodPost,
+				"/user_login",
+				reqBody,
+			)
+			loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+			// make logout request
+			// logoutReq, _ := http.NewRequest(
+			// 	http.MethodGet,
+			// 	"/user_logout",
+			// 	nil,
+			// )
+
+			r.ServeHTTP(resp, loginReq)
+			// r.ServeHTTP(resp, logoutReq)
+
 		})
 	}
 }
