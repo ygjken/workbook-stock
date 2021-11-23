@@ -8,7 +8,7 @@ import (
 	mid "github.com/ygjken/workbook-stock/middlewares"
 )
 
-func main() {
+func router() *gin.Engine {
 	router := gin.Default()
 
 	store := cookie.NewStore([]byte("_secret"))
@@ -21,11 +21,17 @@ func main() {
 	router.GET("/login", ctl.Login)
 	router.POST("/user_login", ctl.UserLogIn) // cookicのテスト
 
-	user := router.Group("/user")
+	user := router.Group("/u")
 	user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
 	{
 		user.GET("/testmain", ctl.TestMain)
 	}
 
-	router.Run(":8080")
+	return router
+}
+
+func main() {
+
+	router().Run(":8080")
+
 }
