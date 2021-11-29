@@ -1,3 +1,4 @@
+# デプロイ時に変更
 dbConnection:
   dbDriver: postgres
   dsn: host=postgres user=pguser password=password dbname=workbookstock sslmode=disable

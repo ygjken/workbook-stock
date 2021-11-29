@@ -5,25 +5,26 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/ygjken/workbook-stock/crypto"
 	"gopkg.in/yaml.v2"
 )
 
 var Db *sql.DB
 
-type config struct {
-	dbConnection dbConnection `yaml:"dbConnection"`
-	initUsers    []initUser   `yaml:"initUsers"`
+type Config struct {
+	DbConnection DbConnection `yaml:"dbConnection"`
+	InitUsers    []InitUser   `yaml:"initUsers"`
 }
 
-type dbConnection struct {
-	dbDriver string `yaml:"dbDriver"`
-	dsn      string `yaml:"dsn"`
+type DbConnection struct {
+	DbDriver string `yaml:"dbDriver"`
+	Dsn      string `yaml:"dsn"`
 }
 
-type initUser struct {
-	email    string `yaml:"email"`
-	name     string `yaml:"name"`
-	password string `yaml:"password"`
+type InitUser struct {
+	Email    string `yaml:"email"`
+	Name     string `yaml:"name"`
+	Password string `yaml:"password"`
 }
 
 func init() {
@@ -33,7 +34,7 @@ func init() {
 		log.Println(err)
 	}
 
-	var c config
+	var c Config
 	err = yaml.Unmarshal(buf, &c)
 	if err != nil {
 		log.Println("Cannot unmarshal yaml file")
@@ -41,9 +42,25 @@ func init() {
 	}
 	log.Println(c)
 
-	Db, err = sql.Open("postgres", "host=postgres user=pguser password=password dbname=workbookstock sslmode=disable")
+	// connect to DB
+	Db, err = sql.Open(c.DbConnection.DbDriver, c.DbConnection.Dsn)
 	if err != nil {
 		log.Println("Cannot connect to database")
 		panic("Cannot to connect database")
+	}
+
+	// insert test user
+	encodedPw, err := crypto.PasswordEncrypt(c.InitUsers[0].Password)
+	if err != nil {
+		log.Println("Cannot set init user: ", err)
+	}
+	u := User{
+		Email:    c.InitUsers[0].Email,
+		UserName: c.InitUsers[0].Name,
+		Password: encodedPw,
+	}
+
+	if err = u.Create(); err != nil {
+		log.Println("Cannot set init user: ", err)
 	}
 }
