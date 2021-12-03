@@ -10,33 +10,21 @@ import (
 	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
 	"github.com/ygjken/workbook-stock/model"
+	mdl "github.com/ygjken/workbook-stock/model"
 )
 
 // TODO: セッションとクッキーに対応できるように書き換え
 func UserSignUp(ctx *gin.Context) {
-	println("post/signup")
-	username := ctx.PostForm("username")
-	email := ctx.PostForm("emailaddress")
-	password := ctx.PostForm("password")
-	passwordConf := ctx.PostForm("passwordconfirmation")
+	var dummyUser mdl.User
+	var err error
 
-	if password != passwordConf {
-		println("Error: password and passwordConf not match")
-		ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
-		return
+	dummyUser.UserName = "tester"
+	dummyUser.Password, err = crypto.PasswordEncrypt("admintest")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"Error": "Password Encrypt Error",
+		})
 	}
-
-	db := model.DummyDB()
-	if err := db.SaveUser(username, email, password); err != nil {
-		println("Error: " + err.Error())
-	} else {
-		println("Signup success!!")
-		println("  username: " + username)
-		println("  email: " + email)
-		println("  password: " + password)
-	}
-
-	ctx.Redirect(http.StatusSeeOther, "//localhost:8080/")
 }
 
 // ログインの処理を行う

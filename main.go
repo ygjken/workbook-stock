@@ -1,19 +1,25 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/postgres"
 	"github.com/gin-gonic/gin"
 	ctl "github.com/ygjken/workbook-stock/controllers"
 	mid "github.com/ygjken/workbook-stock/middlewares"
+	mdl "github.com/ygjken/workbook-stock/model"
 )
 
 func router() *gin.Engine {
 	router := gin.Default()
 
-	store := cookie.NewStore([]byte("_secret"))
-	store.Options(sessions.Options{MaxAge: 3600})
-	router.Use(sessions.Sessions("_session", store))
+	store, err := postgres.NewStore(mdl.Db, []byte("secret"))
+	if err != nil {
+		log.Println("Cannot to use store for cookie in postgres")
+		panic(err)
+	}
+	router.Use(sessions.Sessions("othersession", store))
 
 	router.LoadHTMLGlob("./views/build/*.html")        // html
 	router.Static("/static/", "./views/build/static/") // react
