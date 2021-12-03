@@ -9,7 +9,7 @@ import (
 type Session struct {
 	Id        int
 	Uuid      string
-	Email     string
+	UserName  string
 	UserId    int
 	CreatedAt time.Time
 }
@@ -24,6 +24,6 @@ func (user *User) CreateSession() (s Session, err error) {
 	defer stmt.Close()
 
 	// 今のUserがセッションを持っていない場合に実行される
-	err = stmt.QueryRow(crypto.LongSecureRandomBase64(), user.Email, user.Id, time.Now()).Scan(&s.Id, &s.Uuid, &s.Email, &s.UserId, &s.CreatedAt)
+	err = stmt.QueryRow(crypto.LongSecureRandomBase64(), user.Email, user.Id, time.Now()).Scan(&s.Id, &s.Uuid, &s.UserName, &s.UserId, &s.CreatedAt)
 	return
 }
