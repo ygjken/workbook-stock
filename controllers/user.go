@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
-	"github.com/ygjken/workbook-stock/model"
 	mdl "github.com/ygjken/workbook-stock/model"
 )
 
@@ -31,40 +30,37 @@ func UserSignUp(ctx *gin.Context) {
 func UserLogIn(ctx *gin.Context) {
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
+	user, err := mdl.GetUserByUserName(username)
 
-	// ログインできるかどうかをチェック
-	db := model.DummyDB()
-	user, err := db.GetUser(username, password)
+	// ユーザが存在するかどうか
 	if err != nil {
 		log.Printf("Error: " + err.Error())
-		ctx.Redirect(http.StatusFound, "/login")
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "ユーザが見つかりませんでした",
+		})
+		return
+	}
+
+	// パスワードが正しいかどうか
+	if err = crypto.CompareHashAndPassword(user.Password, password); err != nil {
+		log.Println("UserLogin Error: " + err.Error())
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "パスワードが正しくありませんでした",
+		})
 		return
 	}
 
 	// セッションとクッキーをセット
-	uuid := crypto.SecureRandomBase64()
-	session := sessions.Default(ctx)
-	ctx.SetCookie("uuid", uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
-
-	// セッションの制御
-	uuids := session.Get("logined_uuid_str")
-	if uuids == nil {
-		session.Set("logined_uuid_str", uuid)
-	} else {
-		if uuidstr, err := dproxy.New(uuids).String(); err == nil {
-			uuids = uuidstr + uuid
-			session.Set("logined_uuid_str", uuids)
-		}
+	session, err := user.CreateSession()
+	if err != nil {
+		log.Println("UserLogin Error: " + err.Error())
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "現在ログインすることができません",
+		})
+		return
 	}
-	session.Save()
 
-	// DEBUG:
-	// log.Printf("Authentication Success!!")
-	// log.Printf("  username: " + user.Username)
-	// log.Printf("  email: " + user.Email)
-	// log.Printf("  password: " + user.Password)
-	// log.Println("  setted session: ", session.Get("uuid"))
-	user.Authenticate()
+	ctx.SetCookie("uuid", session.Uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
 
 	ctx.Redirect(http.StatusSeeOther, "/")
 }
