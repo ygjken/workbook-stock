@@ -27,3 +27,17 @@ func (user *User) CreateSession() (s Session, err error) {
 	err = stmt.QueryRow(crypto.LongSecureRandomBase64(), user.UserName, user.Id, time.Now()).Scan(&s.Id, &s.Uuid, &s.UserName, &s.UserId, &s.CreatedAt)
 	return
 }
+
+// セッションが有効かどうかをチャック
+func (s *Session) Check() (valid bool, err error) {
+	Db.QueryRow("SELECT id, uuid, user_name, user_id, created_at FROM sessions WHERE uuid = $1", s.Uuid).Scan(&s.Id, &s.Uuid, &s.UserName, &s.UserId, &s.CreatedAt)
+	if err != nil {
+		valid = false
+		return
+	}
+	if s.Id != 0 {
+		valid = true
+	}
+
+	return
+}

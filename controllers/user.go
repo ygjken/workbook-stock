@@ -34,7 +34,7 @@ func UserLogIn(ctx *gin.Context) {
 
 	// ユーザが存在するかどうか
 	if err != nil {
-		log.Printf("Error: " + err.Error())
+		log.Printf("UserLogin Error: " + err.Error())
 		ctx.HTML(http.StatusFound, "login.html", gin.H{
 			"Error": "ユーザが見つかりませんでした",
 		})

@@ -3,11 +3,9 @@ package middlewares
 import (
 	"log"
 	"net/http"
-	"regexp"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/koron/go-dproxy"
+	mdl "github.com/ygjken/workbook-stock/model"
 )
 
 func LoginCheck() gin.HandlerFunc {
@@ -15,30 +13,21 @@ func LoginCheck() gin.HandlerFunc {
 		uuid, err := ctx.Cookie("uuid")
 		if err != nil {
 			log.Println("middleware/LoginCheck Error:", err)
-			ctx.Redirect(http.StatusSeeOther, "/")
+			ctx.Redirect(http.StatusSeeOther, "/login")
+			ctx.Set("logined", "no")
 			ctx.Abort()
 		}
 
-		session := sessions.Default(ctx)
-		logined := session.Get("logined_uuid_str")
-		if logined == nil {
-			ctx.Redirect(http.StatusSeeOther, "/")
+		s := mdl.Session{Uuid: uuid}
+		ok, _ := s.Check()
+		if !ok {
+			log.Println("middleware/LoginCheck Error:", err)
+			ctx.Redirect(http.StatusSeeOther, "/login")
+			ctx.Set("logined", "no")
 			ctx.Abort()
-		} else {
-			loginedstr, err := dproxy.New(logined).String()
-			if err != nil {
-				log.Println("middleware/LoginCheck Error:", err)
-				ctx.Redirect(http.StatusSeeOther, "/")
-				ctx.Abort()
-			}
-
-			r := regexp.MustCompile(uuid)
-			if !r.MatchString(loginedstr) {
-				ctx.Redirect(http.StatusSeeOther, "/")
-			} else {
-				ctx.Next()
-			}
 		}
 
+		ctx.Set("logined", "yes")
+		ctx.Next()
 	}
 }
