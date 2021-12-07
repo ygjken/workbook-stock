@@ -3,11 +3,8 @@ package controllers
 import (
 	"log"
 	"net/http"
-	"regexp"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
 	mdl "github.com/ygjken/workbook-stock/model"
 )
@@ -59,45 +56,30 @@ func UserLogIn(ctx *gin.Context) {
 		})
 		return
 	}
-
 	ctx.SetCookie("uuid", session.Uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
-
+	ctx.Set("logined", "yes")
 	ctx.Redirect(http.StatusSeeOther, "/")
 }
 
-// TODO: 作成途中
 // ログアウト処理を行う
 func UserLogOut(ctx *gin.Context) {
 	uuid, err := ctx.Cookie("uuid")
 	if err != nil {
-		log.Println("controllers/UserLogout Error:", err)
+		log.Println("controllers/UserLogOut Debug:", err)
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
-	session := sessions.Default(ctx)
-	logined := session.Get("logined_uuid_str")
-	if logined != nil {
-		log.Println("controllers/UserLogout Error:", err)
-		ctx.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-
-	loginedstr, err := dproxy.New(logined).String()
+	s := mdl.Session{Uuid: uuid}
+	err = s.DeleteByUUID()
 	if err != nil {
-		log.Println("controllers/UserLogout Error:", err)
+		log.Println("controllers/UserLogOut Debug:", err)
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
-	r := regexp.MustCompile(uuid)
-	if !r.MatchString(loginedstr) {
-		log.Println("controllers/UserLogout Error: Can't find uuid of the logined user in session")
-		ctx.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-	loginedstr = r.ReplaceAllString(loginedstr, "")
-	session.Set("logined_uuid_str", loginedstr)
+	ctx.Set("logined", "no")
+	ctx.Redirect(http.StatusSeeOther, "/")
 }
 
 // 指定のキーが配列内に存在しているかどうか

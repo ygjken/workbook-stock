@@ -41,3 +41,16 @@ func (s *Session) Check() (valid bool, err error) {
 
 	return
 }
+
+// セッションを削除する
+func (s *Session) DeleteByUUID() (err error) {
+	statement := "DELETE FROM sessions WHERE uuid = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(s.Uuid)
+	return
+}
