@@ -26,6 +26,10 @@ type wantedResponse struct {
 	location string
 }
 
+type loginedSession struct {
+	uuid string
+}
+
 func TestUserLogIn(t *testing.T) {
 
 	tests := []struct {
@@ -77,7 +81,7 @@ func TestUserLogIn(t *testing.T) {
 			// response
 			resp := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(resp)
-			fmt.Println(resp)
+			// fmt.Println(resp)
 
 			// make request
 			ctx.Request, _ = http.NewRequest(
@@ -87,10 +91,10 @@ func TestUserLogIn(t *testing.T) {
 			)
 			ctx.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-			// r.ServeHTTP(resp, req)
 			UserLogIn(ctx)
 
-			fmt.Println(resp)
+			// fmt.Println(ctx.Request)
+			// fmt.Println(resp)
 
 			// check response
 			if resp.Code != tt.want.code {
@@ -102,6 +106,66 @@ func TestUserLogIn(t *testing.T) {
 			if resp.HeaderMap.Get("Set-Cookie") == "" {
 				t.Errorf("Login failed with \"%s\": Cookie not be setted.", tt.name)
 			}
+		})
+	}
+}
+
+func TestUserLogOut(t *testing.T) {
+	tests := []struct {
+		name    string
+		session loginedSession
+		want    wantedResponse
+	}{
+		// TODO: Add test cases.
+		{
+			name:    "correct login",
+			session: loginedSession{uuid: crypto.LongSecureRandomBase64()},
+			want:    wantedResponse{code: http.StatusOK, location: "/"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// モック宣言
+			var mock sqlmock.Sqlmock
+			mdl.Db, mock, _ = sqlmock.New()
+			defer mdl.Db.Close()
+
+			// モックの反応を定義
+			mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM sessions WHERE uuid = $1`)).
+				WithArgs(tt.session.uuid)
+
+			// response
+			resp := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(resp)
+
+			// make request
+			ctx.Request, _ = http.NewRequest(
+				http.MethodPost,
+				"/user_login",
+				nil,
+			)
+			ctx.SetCookie("uuid", tt.session.uuid, 3600, "/", "localhost", true, true)
+
+			fmt.Println(resp.HeaderMap.Get("Set-Cookie"))
+
+			// fmt.Println(resp)
+
+			// call controller
+			// UserLogOut(ctx)
+
+			// fmt.Println(resp)
+
+			// check response
+			// if resp.Code != tt.want.code {
+			// 	t.Errorf("Login failed with \"%s\": Status Code not match.", tt.name)
+			// }
+			// if resp.HeaderMap.Get("Location") != tt.want.location {
+			// 	t.Errorf("Login failed with \"%s\": Location not match.", tt.name)
+			// }
+			// if resp.HeaderMap.Get("Set-Cookie") == "" {
+			// 	t.Errorf("Login failed with \"%s\": Cookie not be setted.", tt.name)
+			// }
+
 		})
 	}
 }
