@@ -3,13 +3,9 @@ package controllers
 import (
 	"log"
 	"net/http"
-	"regexp"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/koron/go-dproxy"
 	"github.com/ygjken/workbook-stock/crypto"
-	"github.com/ygjken/workbook-stock/model"
 	mdl "github.com/ygjken/workbook-stock/model"
 )
 
@@ -31,77 +27,59 @@ func UserSignUp(ctx *gin.Context) {
 func UserLogIn(ctx *gin.Context) {
 	username := ctx.PostForm("username")
 	password := ctx.PostForm("password")
+	user, err := mdl.GetUserByUserName(username)
 
-	// ログインできるかどうかをチェック
-	db := model.DummyDB()
-	user, err := db.GetUser(username, password)
+	// ユーザが存在するかどうか
 	if err != nil {
-		log.Printf("Error: " + err.Error())
-		ctx.Redirect(http.StatusFound, "/login")
+		log.Printf("UserLogin Error: " + err.Error())
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "ユーザが見つかりませんでした",
+		})
+		return
+	}
+
+	// パスワードが正しいかどうか
+	if err = crypto.CompareHashAndPassword(user.Password, password); err != nil {
+		log.Println("UserLogin Error: " + err.Error())
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "パスワードが正しくありませんでした",
+		})
 		return
 	}
 
 	// セッションとクッキーをセット
-	uuid := crypto.SecureRandomBase64()
-	session := sessions.Default(ctx)
-	ctx.SetCookie("uuid", uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
-
-	// セッションの制御
-	uuids := session.Get("logined_uuid_str")
-	if uuids == nil {
-		session.Set("logined_uuid_str", uuid)
-	} else {
-		if uuidstr, err := dproxy.New(uuids).String(); err == nil {
-			uuids = uuidstr + uuid
-			session.Set("logined_uuid_str", uuids)
-		}
+	session, err := user.CreateSession()
+	if err != nil {
+		log.Println("UserLogin Error: " + err.Error())
+		ctx.HTML(http.StatusFound, "login.html", gin.H{
+			"Error": "現在ログインすることができません",
+		})
+		return
 	}
-	session.Save()
-
-	// DEBUG:
-	// log.Printf("Authentication Success!!")
-	// log.Printf("  username: " + user.Username)
-	// log.Printf("  email: " + user.Email)
-	// log.Printf("  password: " + user.Password)
-	// log.Println("  setted session: ", session.Get("uuid"))
-	user.Authenticate()
-
+	ctx.SetCookie("uuid", session.Uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
+	ctx.Set("logined", "yes")
 	ctx.Redirect(http.StatusSeeOther, "/")
 }
 
-// TODO: 作成途中
 // ログアウト処理を行う
 func UserLogOut(ctx *gin.Context) {
 	uuid, err := ctx.Cookie("uuid")
 	if err != nil {
-		log.Println("controllers/UserLogout Error:", err)
+		log.Println("controllers/UserLogOut Debug:", err)
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
-	session := sessions.Default(ctx)
-	logined := session.Get("logined_uuid_str")
-	if logined != nil {
-		log.Println("controllers/UserLogout Error:", err)
-		ctx.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-
-	loginedstr, err := dproxy.New(logined).String()
+	s := mdl.Session{Uuid: uuid}
+	err = s.DeleteByUUID()
 	if err != nil {
-		log.Println("controllers/UserLogout Error:", err)
+		log.Println("controllers/UserLogOut Debug:", err)
 		ctx.Redirect(http.StatusSeeOther, "/")
 		return
 	}
 
-	r := regexp.MustCompile(uuid)
-	if !r.MatchString(loginedstr) {
-		log.Println("controllers/UserLogout Error: Can't find uuid of the logined user in session")
-		ctx.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-	loginedstr = r.ReplaceAllString(loginedstr, "")
-	session.Set("logined_uuid_str", loginedstr)
+	ctx.Set("logined", "no")
+	ctx.Redirect(http.StatusSeeOther, "/")
 }
 
 // 指定のキーが配列内に存在しているかどうか

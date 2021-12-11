@@ -13,6 +13,7 @@ import (
 
 func router() *gin.Engine {
 	router := gin.Default()
+	mdl.InitDb()
 
 	store, err := postgres.NewStore(mdl.Db, []byte("secret"))
 	if err != nil {
