@@ -42,6 +42,12 @@ func (s *Session) Check() (valid bool, err error) {
 	return
 }
 
+// セッションを所持ユーザーを取得する
+func (s *Session) GetUser() (u User, err error) {
+	err = Db.QueryRow("SELECT id, uuid, user_name, email FROM users WHERE id = $1", s.UserId).Scan(&u.Id, &u.Uuid, &u.UserName, &u.Email)
+	return
+}
+
 // セッションを削除する
 func (s *Session) DeleteByUUID() (err error) {
 	statement := "DELETE FROM sessions WHERE uuid = $1"

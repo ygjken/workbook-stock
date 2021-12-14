@@ -14,7 +14,6 @@ func LoginCheck() gin.HandlerFunc {
 		if err != nil {
 			log.Println("middleware/LoginCheck Error:", err)
 			ctx.Redirect(http.StatusSeeOther, "/login")
-			ctx.Set("logined", "no")
 			ctx.Abort()
 		}
 
@@ -23,11 +22,10 @@ func LoginCheck() gin.HandlerFunc {
 		if !ok {
 			log.Println("middleware/LoginCheck Error:", err)
 			ctx.Redirect(http.StatusSeeOther, "/login")
-			ctx.Set("logined", "no")
 			ctx.Abort()
 		}
 
-		ctx.Set("logined", "yes")
+		ctx.Set("session", s)
 		ctx.Next()
 	}
 }

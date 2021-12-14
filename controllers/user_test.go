@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -77,7 +76,6 @@ func TestUserLogIn(t *testing.T) {
 			// response
 			resp := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(resp)
-			fmt.Println(resp)
 
 			// make request
 			ctx.Request, _ = http.NewRequest(
@@ -89,8 +87,6 @@ func TestUserLogIn(t *testing.T) {
 
 			// r.ServeHTTP(resp, req)
 			UserLogIn(ctx)
-
-			fmt.Println(resp)
 
 			// check response
 			if resp.Code != tt.want.code {
