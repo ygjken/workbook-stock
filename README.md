@@ -20,8 +20,3 @@ Stop and Down Contatiner
 ```
 docker-compose down
 ```
-
-## React
-`views/src`の中に書ける
-
-`views`の中にhtmlを格納できる

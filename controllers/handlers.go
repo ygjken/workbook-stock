@@ -7,14 +7,13 @@ import (
 )
 
 func Index(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", gin.H{})
-	// gin.H{}はテンプレートエンジンに埋め込むためのもの
+	ctx.JSON(http.StatusOK, gin.H{
+		"Location": "/",
+	})
 }
 
 func Login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "login.html", gin.H{})
-}
-
-func TestMain(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "main.html", gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{
+		"Location": "/login",
+	})
 }

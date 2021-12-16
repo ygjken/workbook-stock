@@ -13,7 +13,10 @@ func LoginCheck() gin.HandlerFunc {
 		uuid, err := ctx.Cookie("uuid")
 		if err != nil {
 			log.Println("middleware/LoginCheck Error:", err)
-			ctx.Redirect(http.StatusSeeOther, "/login")
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"Location": "/login",
+				"Msg":      "ログインを行なってください。",
+			})
 			ctx.Abort()
 		}
 
@@ -21,7 +24,10 @@ func LoginCheck() gin.HandlerFunc {
 		ok, _ := s.Check()
 		if !ok {
 			log.Println("middleware/LoginCheck Error:", err)
-			ctx.Redirect(http.StatusSeeOther, "/login")
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"Location": "/login",
+				"Msg":      "再度ログインを行なってください。",
+			})
 			ctx.Abort()
 		}
 

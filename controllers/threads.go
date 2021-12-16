@@ -32,9 +32,8 @@ func CreateThread(ctx *gin.Context) {
 	u, err := s.GetUser()
 	if err != nil {
 		log.Println("controllers/CreateThread Error:", err)
-		ctx.JSON(http.StatusOK, gin.H{
-			"Status": "FAIL",
-			"Error":  "スレッドを作成できませんでした",
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"Error": "ログインを行う必要があります。",
 		})
 		return
 	}
@@ -43,15 +42,13 @@ func CreateThread(ctx *gin.Context) {
 	_, err = u.CreateThread(topic)
 	if err != nil {
 		log.Println("controllers/CreateThread Error:", err)
-		ctx.JSON(http.StatusOK, gin.H{
-			"Status": "FAIL",
-			"Error":  "スレッドを作成できませんでした",
+		ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
+			"Error": "スレッドを作成できませんでした。再度お試しください。",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"Status": "ok",
-		"Error":  "スレッドを作成に成功しました",
+		"Error": "スレッドの作成に成功しました",
 	})
 }
