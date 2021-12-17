@@ -17,7 +17,6 @@ func LoginCheck() gin.HandlerFunc {
 				"Location": "/login",
 				"Msg":      "ログインを行なってください。",
 			})
-			ctx.Abort()
 		}
 
 		s := mdl.Session{Uuid: uuid}
@@ -28,7 +27,6 @@ func LoginCheck() gin.HandlerFunc {
 				"Location": "/login",
 				"Msg":      "再度ログインを行なってください。",
 			})
-			ctx.Abort()
 		}
 
 		ctx.Set("session", s)

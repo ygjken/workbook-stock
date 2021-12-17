@@ -9,46 +9,56 @@ import (
 	mdl "github.com/ygjken/workbook-stock/model"
 )
 
-func Threads(ctx *gin.Context) {
-	errorMsg := ""
-
-	threads, err := mdl.GetThreads()
-	if err != nil {
-		m := "Cannot get threads. "
-		log.Println(m, err)
-		errorMsg = m
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"thread": threads,
-		"Error":  errorMsg,
-	})
-}
-
+// スレッドの作成
 func CreateThread(ctx *gin.Context) {
 
-	tmp := ctx.Value("session")
-	s := tmp.(mdl.Session)
+	sessionVal := ctx.Value("session")
+	s := sessionVal.(mdl.Session)
 	u, err := s.GetUser()
 	if err != nil {
 		log.Println("controllers/CreateThread Error:", err)
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"Error": "ログインを行う必要があります。",
+			"Msg": "ログインを行う必要があります。",
 		})
-		return
 	}
 
 	topic := ctx.PostForm("topic")
 	_, err = u.CreateThread(topic)
 	if err != nil {
 		log.Println("controllers/CreateThread Error:", err)
-		ctx.AbortWithStatusJSON(http.StatusOK, gin.H{
-			"Error": "スレッドを作成できませんでした。再度お試しください。",
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"Msg": "Somethings went worng!",
 		})
-		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"Error": "スレッドの作成に成功しました",
+		"Msg": "スレッドの作成に成功しました",
 	})
+}
+
+// スレッドに所属するポストを読む
+func ReadThreads(ctx *gin.Context) {
+	// url query string の取得
+	threadUuid := ctx.Query("id")
+
+	thread, err := mdl.GetThreadByUUID(threadUuid)
+	if err != nil {
+		log.Println("controllers/ReadThreads Error:", err)
+		ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+			"Msg": "スレッドが見つかりませんでした。",
+		})
+	}
+
+	posts, err := thread.GetPosts()
+	if err != nil {
+		log.Println("controllers/ReadThreads Error:", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"Msg": "Somethings went worng!",
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"Posts": posts,
+	})
+
 }
