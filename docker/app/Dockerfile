@@ -1,7 +1,6 @@
 FROM golang:1.16
 
 RUN apt update
-RUN apt install curl
 
 ARG WORKDIR=/www/workbookstock
 WORKDIR ${WORKDIR}

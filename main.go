@@ -2,12 +2,14 @@ package main
 
 import (
 	"log"
+	"path"
+	"path/filepath"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/postgres"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	ctl "github.com/ygjken/workbook-stock/controllers"
-	mid "github.com/ygjken/workbook-stock/middlewares"
 	mdl "github.com/ygjken/workbook-stock/model"
 )
 
@@ -15,6 +17,7 @@ func router() *gin.Engine {
 	router := gin.Default()
 	mdl.InitDb()
 
+	// 取り除く予定
 	store, err := postgres.NewStore(mdl.Db, []byte("secret"))
 	if err != nil {
 		log.Println("Cannot to use store for cookie in postgres")
@@ -22,17 +25,43 @@ func router() *gin.Engine {
 	}
 	router.Use(sessions.Sessions("othersession", store))
 
-	router.LoadHTMLGlob("./views/build/*.html")        // html
-	router.Static("/static/", "./views/build/static/") // react
-	router.GET("/", ctl.Index)                         // homeページに飛ぶ
-	router.GET("/login", ctl.Login)
-	router.POST("/user_login", ctl.UserLogIn) // cookicのテスト
+	// Reactルーティング
+	router.Use(static.Serve("/", static.LocalFile("./views/build/", true)))
+	folderPath := "./views/build/"
+	router.NoRoute(func(ctx *gin.Context) {
+		_, file := path.Split(ctx.Request.RequestURI) // ディレクトリ名とファイル名を分ける
+		ext := filepath.Ext(file)                     // 拡張子取得
 
-	user := router.Group("/u")
-	user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
+		log.Println(file)
+		log.Println(ext)
+
+		//ディレクトリアクセス（ファイル名がない）かパスクエリ（拡張子がない）
+		if file == "" || ext == "" {
+			ctx.File(folderPath + "/index.html")
+		} else {
+			ctx.File(folderPath + ctx.Request.RequestURI)
+		}
+	})
+
+	// router.LoadHTMLGlob("./views/build/*.html")
+	router.Static("/static/", "./views/build/static/")
+
+	// GETメソッド
+	router.GET("/", ctl.Index)
+	router.GET("/login", ctl.Login)
+	router.GET("/threads", ctl.Threads)
+
+	api := router.Group("/api")
+	api.Use()
 	{
-		user.GET("/testmain", ctl.TestMain)
+		router.POST("/login", ctl.UserLogIn)
 	}
+
+	// user := router.Group("/u")
+	// user.Use(mid.LoginCheck()) // ユーザー認証が必要となるグループ
+	// {
+	// 	user.GET("/testmain", ctl.TestMain)
+	// }
 
 	return router
 }

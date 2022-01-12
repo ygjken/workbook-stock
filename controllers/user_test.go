@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -22,8 +22,12 @@ type formInfo struct {
 }
 
 type wantedResponse struct {
-	code     int
-	location string
+	code int
+	body Body
+}
+
+type Body struct {
+	Location string
 }
 
 func TestUserLogIn(t *testing.T) {
@@ -37,7 +41,7 @@ func TestUserLogIn(t *testing.T) {
 		{
 			name: "correct login",
 			form: formInfo{username: "tester", password: "admintest"},
-			want: wantedResponse{code: http.StatusOK, location: "/"},
+			want: wantedResponse{code: http.StatusMovedPermanently, body: Body{Location: "/"}},
 		},
 	}
 	for _, tt := range tests {
@@ -77,7 +81,6 @@ func TestUserLogIn(t *testing.T) {
 			// response
 			resp := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(resp)
-			fmt.Println(resp)
 
 			// make request
 			ctx.Request, _ = http.NewRequest(
@@ -90,17 +93,17 @@ func TestUserLogIn(t *testing.T) {
 			// r.ServeHTTP(resp, req)
 			UserLogIn(ctx)
 
-			fmt.Println(resp)
-
 			// check response
+			// check status code
 			if resp.Code != tt.want.code {
-				t.Errorf("Login failed with \"%s\": Status Code not match.", tt.name)
+				t.Errorf("[FAIL] Login failed with \"%s\": Status Code not match.", tt.name)
 			}
-			if resp.HeaderMap.Get("Location") != tt.want.location {
-				t.Errorf("Login failed with \"%s\": Location not match.", tt.name)
-			}
-			if resp.HeaderMap.Get("Set-Cookie") == "" {
-				t.Errorf("Login failed with \"%s\": Cookie not be setted.", tt.name)
+
+			// check Location
+			wantedLocation, _ := json.Marshal(tt.want.body)
+			if string(wantedLocation) != string(resp.Body.Bytes()) {
+				t.Errorf("[FAIL] Login failed with \"%s\": Location not match.", tt.name)
+				t.Errorf("want: %s; responce: %s", wantedLocation, resp.Body.Bytes())
 			}
 		})
 	}

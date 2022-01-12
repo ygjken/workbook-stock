@@ -9,20 +9,6 @@ import (
 	mdl "github.com/ygjken/workbook-stock/model"
 )
 
-// TODO: セッションとクッキーに対応できるように書き換え
-func UserSignUp(ctx *gin.Context) {
-	var dummyUser mdl.User
-	var err error
-
-	dummyUser.UserName = "tester"
-	dummyUser.Password, err = crypto.PasswordEncrypt("admintest")
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"Error": "Password Encrypt Error",
-		})
-	}
-}
-
 // ログインの処理を行う
 func UserLogIn(ctx *gin.Context) {
 	username := ctx.PostForm("username")
@@ -32,8 +18,8 @@ func UserLogIn(ctx *gin.Context) {
 	// ユーザが存在するかどうか
 	if err != nil {
 		log.Printf("UserLogin Error: " + err.Error())
-		ctx.HTML(http.StatusFound, "login.html", gin.H{
-			"Error": "ユーザが見つかりませんでした",
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"Msg": "ユーザ名またはパスワードが間違っています",
 		})
 		return
 	}
@@ -41,8 +27,8 @@ func UserLogIn(ctx *gin.Context) {
 	// パスワードが正しいかどうか
 	if err = crypto.CompareHashAndPassword(user.Password, password); err != nil {
 		log.Println("UserLogin Error: " + err.Error())
-		ctx.HTML(http.StatusFound, "login.html", gin.H{
-			"Error": "パスワードが正しくありませんでした",
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"Msg": "ユーザ名またはパスワードが間違っています",
 		})
 		return
 	}
@@ -51,14 +37,18 @@ func UserLogIn(ctx *gin.Context) {
 	session, err := user.CreateSession()
 	if err != nil {
 		log.Println("UserLogin Error: " + err.Error())
-		ctx.HTML(http.StatusFound, "login.html", gin.H{
-			"Error": "現在ログインすることができません",
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"Msg": "エラーが発生しました。再度ログインしてください。",
 		})
 		return
 	}
 	ctx.SetCookie("uuid", session.Uuid, 3600, "/", "localhost", true, true) // jsからクッキーは利用できない
 	ctx.Set("logined", "yes")
-	ctx.Redirect(http.StatusSeeOther, "/")
+
+	ctx.JSON(http.StatusMovedPermanently, gin.H{
+		"Location": "/",
+	})
+
 }
 
 // ログアウト処理を行う
@@ -66,7 +56,9 @@ func UserLogOut(ctx *gin.Context) {
 	uuid, err := ctx.Cookie("uuid")
 	if err != nil {
 		log.Println("controllers/UserLogOut Debug:", err)
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"Msg": "ログインしていません",
+		})
 		return
 	}
 
@@ -74,12 +66,16 @@ func UserLogOut(ctx *gin.Context) {
 	err = s.DeleteByUUID()
 	if err != nil {
 		log.Println("controllers/UserLogOut Debug:", err)
-		ctx.Redirect(http.StatusSeeOther, "/")
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"Msg": "エラーが発生しました。再度ログインしてください。",
+		})
 		return
 	}
 
 	ctx.Set("logined", "no")
-	ctx.Redirect(http.StatusSeeOther, "/")
+	ctx.JSON(http.StatusMovedPermanently, gin.H{
+		"Location": "/",
+	})
 }
 
 // 指定のキーが配列内に存在しているかどうか

@@ -1,20 +1,35 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	mdl "github.com/ygjken/workbook-stock/model"
 )
 
 func Index(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", gin.H{})
-	// gin.H{}はテンプレートエンジンに埋め込むためのもの
+	ctx.JSON(http.StatusOK, gin.H{
+		"Location": "/",
+	})
 }
 
 func Login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "login.html", gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{
+		"Location": "/login",
+	})
 }
 
-func TestMain(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "main.html", gin.H{})
+func Threads(ctx *gin.Context) {
+	threads, err := mdl.GetThreads()
+	if err != nil {
+		log.Println("handlers/Threads Error:", err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"Msg": "Somethings went worng!",
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"Threads": threads,
+	})
 }
