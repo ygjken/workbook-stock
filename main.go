@@ -4,7 +4,9 @@ import (
 	"log"
 	"path"
 	"path/filepath"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/postgres"
 	"github.com/gin-contrib/static"
@@ -17,7 +19,7 @@ func router() *gin.Engine {
 	router := gin.Default()
 	mdl.InitDb()
 
-	// 取り除く予定
+	// TODO:取り除く予定
 	store, err := postgres.NewStore(mdl.Db, []byte("secret"))
 	if err != nil {
 		log.Println("Cannot to use store for cookie in postgres")
@@ -43,6 +45,9 @@ func router() *gin.Engine {
 		}
 	})
 
+	// CORSの設定
+	router.Use(cors.New(getCorsConfig()))
+
 	// router.LoadHTMLGlob("./views/build/*.html")
 	router.Static("/static/", "./views/build/static/")
 
@@ -67,7 +72,15 @@ func router() *gin.Engine {
 }
 
 func main() {
-
 	router().Run(":8080")
+}
 
+func getCorsConfig() cors.Config {
+	return cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Access-Control-Allow-Credentials", "Content-Type"},
+		AllowCredentials: true,      // cookieやTLSなどの資格情報を含むリクエストを承認
+		MaxAge:           time.Hour, // preflightリクエストがキャッシュされる時間
+	}
 }

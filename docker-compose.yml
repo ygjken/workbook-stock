@@ -39,6 +39,5 @@ services:
         ports:
             - '3000:3000'
         volumes:
-            - ./views/build:/workbookstock/build
             - ./views/src:/workbookstock/src
             - ./views/public:/workbookstock/public
