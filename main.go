@@ -48,13 +48,17 @@ func router() *gin.Engine {
 	// CORSの設定
 	router.Use(cors.New(getCorsConfig()))
 
-	// router.LoadHTMLGlob("./views/build/*.html")
+	//// router.LoadHTMLGlob("./views/build/*.html")
 	router.Static("/static/", "./views/build/static/")
 
 	// GETメソッド
 	router.GET("/", ctl.Index)
 	router.GET("/login", ctl.Login)
 	router.GET("/threads", ctl.Threads)
+
+	// debug用メソッド
+	router.GET("/debug-set-cookie", ctl.DebugSetCookie)
+	router.GET("/debug-read-cookie", ctl.DebugReadCookie)
 
 	api := router.Group("/api")
 	api.Use()
@@ -79,7 +83,7 @@ func getCorsConfig() cors.Config {
 	return cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Access-Control-Allow-Credentials", "Content-Type"},
+		AllowHeaders:     []string{"Access-Control-Allow-Credentials", "Content-Type", "Set-Cookie"},
 		AllowCredentials: true,      // cookieやTLSなどの資格情報を含むリクエストを承認
 		MaxAge:           time.Hour, // preflightリクエストがキャッシュされる時間
 	}
